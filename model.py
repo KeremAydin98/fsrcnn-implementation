@@ -1,13 +1,18 @@
 import tensorflow as tf
+import numpy as np
+import config
+
 
 def create_model(d:int,
                  s:int,
                  m:int,
                  rescaling:int,
-                 input,
-                 color_channels=3):
+                 color_channels:int,
+                 input_size:tuple = config.LR_TARGET_SHAPE):
+
+
     # Input layer
-    inputs = tf.keras.layers.Input((input.shape[0], input.shpae[1],color_channels))
+    inputs = tf.keras.layers.Input(shape=(input_size[0], input_size[1], color_channels))
 
     # Feature Extraction
     x = tf.keras.layers.Conv2D(filters = d,
@@ -44,10 +49,9 @@ def create_model(d:int,
                                               kernel_size = 9,
                                               strides=rescaling,
                                               padding="same",
-                                              kernel_initializer=tf.keras.initializers.RandomNormal(mean=0.0, stddev=0.001, seed=None)(x)
-)
+                                              kernel_initializer=tf.keras.initializers.RandomNormal(mean=0.0, stddev=0.001, seed=None))(x)
 
-    model = tf.keras.models(inputs, outputs)
+    model = tf.keras.Model(inputs, outputs)
 
     model.compile(loss=tf.keras.losses.mse,
                   optimizer=tf.keras.optimizers.SGD(learning_rate=0.001))
@@ -59,4 +63,4 @@ def get_callbacks():
 
     return [tf.keras.callbacks.ReduceLROnPlateau(monitor="val_loss",factor=0.5, patience=10),
             tf.keras.callbacks.EarlyStopping(monitor="val_loss",patience=25,restore_best_weights=True),
-            tf.keras.callbacks.ModelCheckpoint(monitor="loss", save_best_only=True, save_weights_only=True)]
+            tf.keras.callbacks.ModelCheckpoint(monitor="loss", filepath="./checkpoints",save_best_only=True, save_weights_only=True)]

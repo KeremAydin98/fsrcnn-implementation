@@ -2,15 +2,18 @@ import os
 import cv2
 import config
 import albumentations as A
+import numpy as np
+from PIL import Image
+import tensorflow as tf
 
+class T91Dataset():
 
-class T91_dataset:
-
-    def __init__(self,batch_size, type):
+    def __init__(self,batch_size, type, color_channels):
 
         self.batch_size = batch_size
         self.data_path = config.DATA_PATH
         self.extension = config.EXTENSION
+        self.color_channels = color_channels
 
         # Get file paths
         img_files = os.listdir(self.data_path)
@@ -46,7 +49,7 @@ class T91_dataset:
 
         if type in ["train", "val"]:
 
-            self.transform = A.compose([
+            self.transform = A.Compose([
                     A.RandomCrop(width=config.HR_TARGET_SHAPE[0], height=config.HR_TARGET_SHAPE[1]),
                     A.Downscale(scale_min=0.6, scale_max=0.9, always_apply=True),
                     A.HorizontalFlip(p=0.5),
@@ -55,8 +58,35 @@ class T91_dataset:
 
         else:
 
-            self.tranform = A.compose([
+            self.transform = A.Compose([
                     A.RandomCrop(width=config.HR_TARGET_SHAPE[0], height=config.HR_TARGET_SHAPE[1])
                 ])
 
+        self.to_float = A.ToFloat(max_value=255)
+
+    def __len__(self):
+
+        return len(self.dataset) // self.batch_size
+
     def __getitem__(self, item):
+
+        index = item * self.batch_size
+
+        batch_images = self.dataset[index:index + self.batch_size]
+
+        batch_hr_images = np.zeros((self.batch_size,) + config.HR_TARGET_SHAPE + (self.color_channels,))
+        batch_lr_images = np.zeros((self.batch_size,) + config.LR_TARGET_SHAPE + (self.color_channels,))
+
+        for i, image_fn in enumerate(batch_images):
+
+            hr_image_transform = self.transform(image=image_fn)["image"]
+            hr_image_transform_pil = Image.fromarray(hr_image_transform)
+            lr_image_transform_pil = hr_image_transform_pil.resize(
+                config.LR_TARGET_SHAPE, resample=config.DOWNSAMPLE_MODE
+            )
+            lr_image_transform = np.array(lr_image_transform_pil)
+
+            batch_hr_images[i] = self.to_float(image=hr_image_transform)["image"]
+            batch_lr_images[i] = self.to_float(image=lr_image_transform)["image"]
+
+        return (batch_lr_images, batch_hr_images)
