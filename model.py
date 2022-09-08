@@ -12,23 +12,30 @@ def create_model(d:int,
     # Feature Extraction
     x = tf.keras.layers.Conv2D(filters = d,
                                kernel_size = 5,
-                               )(inputs)
+                               padding="same",
+                               kernel_initializer=tf.keras.initializers.HeNormal)(inputs)
     x = tf.keras.layers.PReLU()(x)
 
     # Shrinking layer
     x = tf.keras.layers.Conv2D(filters = s,
-                               kernel_size = 1)(x)
+                               kernel_size = 1,
+                               padding="same",
+                               kernel_initializer=tf.keras.initializers.HeNormal)(x)
     x = tf.keras.layers.PReLU()(x)
 
     # Mapping layers
     for i in range(m):
         x = tf.keras.layers.Conv2D(filters = s,
-                                   kernel_size = 3)(x)
+                                   kernel_size = 3,
+                                   padding="same",
+                                   kernel_initializer=tf.keras.initializers.HeNormal)(x)
         x = tf.keras.layers.PReLU()(x)
 
     # Expanding layer
     x = tf.keras.layers.Conv2D(filters = d,
-                               kernel_size = 1)
+                               kernel_size = 1,
+                               padding="same",
+                               kernel_initializer=tf.keras.initializers.HeNormal)
     x = tf.keras.layers.PReLU()(x)
 
     # Deconvolution layer
@@ -36,12 +43,13 @@ def create_model(d:int,
     outputs = tf.keras.layers.Conv2DTranspose(filters=color_channels,
                                               kernel_size = 9,
                                               strides=upscaling,
+                                              padding="same",
                                               kernel_initializer=tf.keras.initializers.RandomNormal(mean=0.0, stddev=0.001, seed=None)
 )
 
     model = tf.keras.models(inputs, outputs)
 
     model.compile(loss=tf.keras.losses.mse,
-                  optimizer="adam")
+                  optimizer=tf.keras.optimizers.SGD)
 
     return model
