@@ -53,7 +53,7 @@ def create_model(d:int,
     model = tf.keras.Model(inputs, outputs)
 
     model.compile(loss=tf.keras.losses.mse,
-                  optimizer=tf.keras.optimizers.SGD(learning_rate=0.001))
+                  optimizer=tf.keras.optimizers.Adam(learning_rate=0.001))
 
     return model
 
@@ -61,5 +61,5 @@ def create_model(d:int,
 def get_callbacks():
 
     return [tf.keras.callbacks.ReduceLROnPlateau(monitor="val_loss",factor=0.5, patience=10),
-            tf.keras.callbacks.EarlyStopping(monitor="val_loss",patience=25,restore_best_weights=True),
-            tf.keras.callbacks.ModelCheckpoint(monitor="loss", filepath="./checkpoints",save_best_only=True, save_weights_only=True)]
+            tf.keras.callbacks.EarlyStopping(monitor="val_loss",patience=50,restore_best_weights=True),
+            tf.keras.callbacks.ModelCheckpoint(monitor="val_loss", filepath="checkpoint.h5",save_best_only=True)]

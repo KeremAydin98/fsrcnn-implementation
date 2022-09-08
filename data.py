@@ -1,11 +1,11 @@
 import os
-import cv2
 import config
 import albumentations as A
 import numpy as np
 from PIL import Image
+import tensorflow as tf
 
-class T91Dataset():
+class T91Dataset(tf.keras.utils.Sequence):
 
     def __init__(self,batch_size, which_type, color_channels):
 
@@ -13,12 +13,13 @@ class T91Dataset():
         self.data_path = config.DATA_PATH
         self.extension = config.EXTENSION
         self.color_channels = color_channels
+        self.which_type = which_type
 
         # Get file paths
         img_files = os.listdir(self.data_path)
 
         # Load the images
-        images = [Image.open(os.path.join(self.data_path, f)) for f in img_files if f.endswith(self.extension)]
+        images = [np.array(Image.open(os.path.join(self.data_path, f))) for f in img_files if f.endswith(self.extension)]
 
         train_test = 0.7
         val_test = 0.66
@@ -34,11 +35,11 @@ class T91Dataset():
         # Test images
         test_images = val_test_images[int(len(val_test_images) * val_test):]
 
-        if which_type == "train":
+        if self.which_type == "train":
 
             self.dataset = train_images
 
-        elif which_type == "validation":
+        elif self.which_type == "validation":
 
             self.dataset = val_images
 
@@ -46,7 +47,7 @@ class T91Dataset():
 
             self.dataset = test_images
 
-        if which_type in ["train", "val"]:
+        if self.which_type in ["train", "val"]:
 
             self.transform = A.Compose([
                     A.RandomCrop(width=config.HR_TARGET_SHAPE[0], height=config.HR_TARGET_SHAPE[1]),
@@ -76,10 +77,15 @@ class T91Dataset():
         batch_hr_images = np.zeros((self.batch_size,) + config.HR_TARGET_SHAPE + (self.color_channels,))
         batch_lr_images = np.zeros((self.batch_size,) + config.LR_TARGET_SHAPE + (self.color_channels,))
 
+        print(np.array(batch_images[0]).shape)
+        print(np.array(batch_images[1]).shape)
+        print(np.array(batch_images[2]).shape)
+        print("-------------------")
 
         for i, image_fn in enumerate(batch_images):
 
             hr_image_transform = self.transform(image=np.array(image_fn))["image"]
+
             hr_image_transform_pil = Image.fromarray(hr_image_transform)
             lr_image_transform_pil = hr_image_transform_pil.resize(
                 config.LR_TARGET_SHAPE, resample=config.DOWNSAMPLE_MODE
