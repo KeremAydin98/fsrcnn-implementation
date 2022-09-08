@@ -1,15 +1,12 @@
 import os
 import cv2
-import numpy as np
 import config
+import albumentations as A
 
-"""
-Loading the images
-"""
 
 class T91_dataset:
 
-    def __init__(self,batch_size):
+    def __init__(self,batch_size, type):
 
         self.batch_size = batch_size
         self.data_path = config.DATA_PATH
@@ -35,12 +32,31 @@ class T91_dataset:
         # Test images
         test_images = val_test_images[int(len(val_test_images) * val_test):]
 
-        all_images = [train_images, val_images, test_images]
+        if type == "train":
 
-        for ind, type in enumerate(all_images):
+            self.dataset = train_images
 
-            if ind in [0,1]:
+        elif type == "validation":
 
-                for image in type:
+            self.dataset = val_images
 
-                    tf.image.random_crop(image, size=config.TARGET_SHAPE)
+        else:
+
+            self.dataset = test_images
+
+        if type in ["train", "val"]:
+
+            self.transform = A.compose([
+                    A.RandomCrop(width=config.HR_TARGET_SHAPE[0], height=config.HR_TARGET_SHAPE[1]),
+                    A.Downscale(scale_min=0.6, scale_max=0.9, always_apply=True),
+                    A.HorizontalFlip(p=0.5),
+                    A.Rotate(limit=270)
+                ])
+
+        else:
+
+            self.tranform = A.compose([
+                    A.RandomCrop(width=config.HR_TARGET_SHAPE[0], height=config.HR_TARGET_SHAPE[1])
+                ])
+
+    def __getitem__(self, item):

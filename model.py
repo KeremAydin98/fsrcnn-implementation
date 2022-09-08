@@ -3,9 +3,9 @@ import tensorflow as tf
 def create_model(d:int,
                  s:int,
                  m:int,
-                 upscaling:int,
+                 rescaling:int,
                  input,
-                 color_channels=1):
+                 color_channels=3):
     # Input layer
     inputs = tf.keras.layers.Input((input.shape[0], input.shpae[1],color_channels))
 
@@ -35,16 +35,16 @@ def create_model(d:int,
     x = tf.keras.layers.Conv2D(filters = d,
                                kernel_size = 1,
                                padding="same",
-                               kernel_initializer=tf.keras.initializers.HeNormal)
+                               kernel_initializer=tf.keras.initializers.HeNormal)(x)
     x = tf.keras.layers.PReLU(shared_axes=[1, 2])(x)
 
     # Deconvolution layer
     # Stride = upscaling factor
     outputs = tf.keras.layers.Conv2DTranspose(filters=color_channels,
                                               kernel_size = 9,
-                                              strides=upscaling,
+                                              strides=rescaling,
                                               padding="same",
-                                              kernel_initializer=tf.keras.initializers.RandomNormal(mean=0.0, stddev=0.001, seed=None)
+                                              kernel_initializer=tf.keras.initializers.RandomNormal(mean=0.0, stddev=0.001, seed=None)(x)
 )
 
     model = tf.keras.models(inputs, outputs)
@@ -57,5 +57,6 @@ def create_model(d:int,
 
 def get_callbacks():
 
-    return [tf.keras.callbacks.ReduceLROnPlateau(monitor="val_loss",factor=0.5, patience=2),
-            tf.keras.callbacks.EarlyStopping(monitor="val_loss",patience=10,restore_best_weights=True)]
+    return [tf.keras.callbacks.ReduceLROnPlateau(monitor="val_loss",factor=0.5, patience=10),
+            tf.keras.callbacks.EarlyStopping(monitor="val_loss",patience=25,restore_best_weights=True),
+            tf.keras.callbacks.ModelCheckpoint(monitor="loss", save_best_only=True, save_weights_only=True)]
