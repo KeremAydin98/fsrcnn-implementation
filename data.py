@@ -6,18 +6,41 @@ import config
 """
 Loading the images
 """
-def load_image():
-    # Data path
-    data_path = config.data_path
-    # Get file paths
-    img_files = os.listdir(data_path)
-    # Png extension
-    extension = config.extension
-    # Load the images
-    images = [cv2.imread(data_path + f) for f in img_files if f.endswith(extension)]
-    # Resizing the images
-    images = [cv2.resize(image, config.target_shape) for image in images]
-    # Turn them into numpy arrays
-    images = np.array(images)
 
-    return images
+class T91_dataset:
+
+    def __init__(self,batch_size):
+
+        self.batch_size = batch_size
+        self.data_path = config.DATA_PATH
+        self.extension = config.EXTENSION
+
+        # Get file paths
+        img_files = os.listdir(self.data_path)
+
+        # Load the images
+        images = [cv2.imread(self.data_path + f) for f in img_files if f.endswith(self.extension)]
+
+        train_test = 0.7
+        val_test = 0.66
+
+        # Train images
+        train_images = images[:int(len(images) * train_test)]
+
+        val_test_images = images[int(len(images) * train_test):]
+
+        # Validation images
+        val_images = val_test_images[:int(len(val_test_images) * val_test)]
+
+        # Test images
+        test_images = val_test_images[int(len(val_test_images) * val_test):]
+
+        all_images = [train_images, val_images, test_images]
+
+        for ind, type in enumerate(all_images):
+
+            if ind in [0,1]:
+
+                for image in type:
+
+                    tf.image.random_crop(image, size=config.TARGET_SHAPE)

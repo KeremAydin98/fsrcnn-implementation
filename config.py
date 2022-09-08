@@ -1,10 +1,10 @@
 
 
 # Data path
-data_path = "./data/T91/"
+DATA_PATH = "./data/T91/"
 
 # Png extension
-extension = ".png"
+EXTENSION = ".png"
 
 # From the smallest image in the dataset
-target_shape = (78,78)
+TARGET_SHAPE = (78,78)
