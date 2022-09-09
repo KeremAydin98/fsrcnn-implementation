@@ -77,11 +77,6 @@ class T91Dataset(tf.keras.utils.Sequence):
         batch_hr_images = np.zeros((self.batch_size,) + config.HR_TARGET_SHAPE + (self.color_channels,))
         batch_lr_images = np.zeros((self.batch_size,) + config.LR_TARGET_SHAPE + (self.color_channels,))
 
-        print(np.array(batch_images[0]).shape)
-        print(np.array(batch_images[1]).shape)
-        print(np.array(batch_images[2]).shape)
-        print("-------------------")
-
         for i, image_fn in enumerate(batch_images):
 
             hr_image_transform = self.transform(image=np.array(image_fn))["image"]
