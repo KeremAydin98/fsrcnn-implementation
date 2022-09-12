@@ -98,6 +98,7 @@ I have concluded training, however I could not get successful results with the p
 # Thanks to Olga Chernytska
 
 Huge thanks to OlgaChernytska for her great blog explanation for code implementations in Medium and her clean code implementation in Github. They both benefitted me.
+
 Her blog:
 
 https://medium.com/towards-data-science/learn-to-reproduce-papers-beginners-guide-2b4bff8fcca0
